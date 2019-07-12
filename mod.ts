@@ -1,16 +1,19 @@
-import { join } from "https://deno.land/std/fs/path.ts";
-import { exists } from "https://deno.land/std/fs/mod.ts";
+import { fs, path } from "./deps.ts";
 const { run } = Deno;
 
 export function prepareDestPath(destDir, source) {
   const { protocol, hostname, pathname } = new URL(source);
   const [, sshHostname = ""] = protocol.match(/^git@(.*):$/) || [];
 
-  return join(destDir, sshHostname || hostname, pathname.replace(/.git$/, ""));
+  return path.join(
+    destDir,
+    sshHostname || hostname,
+    pathname.replace(/.git$/, "")
+  );
 }
 
 export async function clone(source, dest) {
-  const isCloned = await exists(join(dest, ".git"));
+  const isCloned = await fs.exists(path.join(dest, ".git"));
 
   if (isCloned) {
     console.log(`Repository '${source}' already exist.`);
