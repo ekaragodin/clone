@@ -7,7 +7,7 @@ A simple utility for the convenient clone.
 ## Install
 
 ```bash
-deno install clone https://denopkg.com/ekaragodin/clone/clone.ts --allow-all
+deno install clone https://deno.land/x/clone@1.0.0/clone.ts --allow-all
 ```
 
 > By default scripts are installed at \$HOME/.deno/bin and that directory must be added to the path manually. See more in Deno [docs](https://deno.land/manual.html#installingexecutablescripts).
