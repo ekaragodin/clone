@@ -2,13 +2,14 @@ import { fs, path } from "./deps.ts";
 const { run } = Deno;
 
 export function prepareDestPath(destDir, source) {
-  const { protocol, hostname, pathname } = new URL(source);
-  const [, sshHostname = ""] = protocol.match(/^git@(.*):$/) || [];
+  const { hostname, pathname } = new URL(source, "ssh://");
+  const [, , sshHostname = "", sshPathname = ""] =
+    pathname.match(/^\/(\w+)@(.*):(.*)$/) || [];
 
   return path.join(
     destDir,
     sshHostname || hostname,
-    pathname.replace(/.git$/, "")
+    (sshPathname || pathname).replace(/.git$/, "")
   );
 }
 
