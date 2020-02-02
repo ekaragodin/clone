@@ -1,4 +1,4 @@
-#!/usr/bin/env deno --allow-env --allow-read --allow-write --allow-run
+#!/usr/bin/env -S deno --allow-env --allow-read --allow-write --allow-run
 import { fs, path } from "./deps.ts";
 import { prepareDestPath, clone, openEditor } from "./mod.ts";
 const { args, exit, env } = Deno;

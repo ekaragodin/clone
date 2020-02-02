@@ -1,4 +1,4 @@
-#!/usr/bin/env deno --allow-all
+#!/usr/bin/env -S deno --allow-all
 
 import { test, runIfMain } from "https://deno.land/std@v0.31.0/testing/mod.ts";
 import { assertEquals } from "https://deno.land/std@v0.31.0/testing/asserts.ts";
