@@ -1,7 +1,7 @@
 #!/usr/bin/env deno --allow-all
 
-import { test, runIfMain } from "https://deno.land/std/testing/mod.ts";
-import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
+import { test, runIfMain } from "https://deno.land/std@v0.31.0/testing/mod.ts";
+import { assertEquals } from "https://deno.land/std@v0.31.0/testing/asserts.ts";
 import { prepareDestPath } from "./mod.ts";
 
 test(function testPrepareDestPath() {
