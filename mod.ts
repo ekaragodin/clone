@@ -1,7 +1,7 @@
 import { fs, path } from "./deps.ts";
 const { run } = Deno;
 
-export function prepareDestPath(destDir, source) {
+export function prepareDestPath(destDir: string, source: string) {
   const { hostname, pathname } = new URL(source, "ssh://");
   const [, , sshHostname = "", sshPathname = ""] =
     pathname.match(/^\/(\w+)@(.*):(.*)$/) || [];
@@ -13,7 +13,7 @@ export function prepareDestPath(destDir, source) {
   );
 }
 
-export async function clone(source, dest) {
+export async function clone(source: string, dest: string) {
   const isCloned = await fs.exists(path.join(dest, ".git"));
 
   if (isCloned) {
@@ -24,7 +24,7 @@ export async function clone(source, dest) {
   console.log(`Clone '${source}' into '${dest}'...`);
 
   const clone = run({
-    args: ["git", "clone", source, dest]
+    cmd: ["git", "clone", source, dest],
   });
   const cloneResult = await clone.status();
 
@@ -33,7 +33,7 @@ export async function clone(source, dest) {
   }
 }
 
-export async function openEditor(editor, dest) {
+export async function openEditor(editor: string, dest: string) {
   if (!editor) {
     console.log("Environment variable 'EDITOR' is empty.");
     return;
@@ -42,7 +42,7 @@ export async function openEditor(editor, dest) {
   console.log(`Open '${dest}' in '${editor}'...`);
 
   const open = run({
-    args: [editor, dest]
+    cmd: [editor, dest],
   });
   const openResult = await open.status();
 

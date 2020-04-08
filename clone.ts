@@ -6,7 +6,7 @@ const { args, exit, env } = Deno;
 async function main() {
   try {
     const { EDITOR: editor, SRC_DIR: root = "~/src" } = env();
-    const [, source] = args;
+    const [source] = args;
 
     if (!source) {
       throw new Error("You must specify a repository to clone.");
