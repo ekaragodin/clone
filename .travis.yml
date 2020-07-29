@@ -10,4 +10,4 @@ install:
 
 script:
   - deno lint --unstable .
-  - deno test .
+  - deno test --unstable .
