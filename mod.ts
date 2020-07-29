@@ -9,7 +9,7 @@ export function prepareDestPath(destDir: string, source: string) {
   return path.join(
     destDir,
     sshHostname || hostname,
-    (sshPathname || pathname).replace(/.git$/, "")
+    (sshPathname || pathname).replace(/.git$/, ""),
   );
 }
 

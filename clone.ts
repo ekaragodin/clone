@@ -1,11 +1,12 @@
-#!/usr/bin/env -S deno --allow-env --allow-read --allow-write --allow-run
+#!/usr/bin/env -S deno run --unstable --allow-env --allow-read --allow-write --allow-run
 import { fs, path } from "./deps.ts";
 import { prepareDestPath, clone, openEditor } from "./mod.ts";
 const { args, exit, env } = Deno;
 
 async function main() {
   try {
-    const { EDITOR: editor, SRC_DIR: root = "~/src" } = env();
+    const editor = env.get("EDITOR");
+    const root = env.get("SRC_DIR") || "~/src";
     const [source] = args;
 
     if (!source) {
@@ -16,7 +17,9 @@ async function main() {
 
     fs.ensureDirSync(dest);
     await clone(source, dest);
-    await openEditor(editor, dest);
+    if (editor) {
+      await openEditor(editor, dest);
+    }
 
     console.log("Done.");
   } catch (e) {
