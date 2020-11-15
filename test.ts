@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@v0.62.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.77.0/testing/asserts.ts";
 import { prepareDestPath } from "./mod.ts";
 
 Deno.test("testPrepareDestPath", function () {
