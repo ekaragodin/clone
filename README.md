@@ -1,6 +1,6 @@
 # clone
 
-[![Build Status](https://travis-ci.com/ekaragodin/clone.svg?branch=master)](https://travis-ci.com/ekaragodin/clone)
+[![CI](https://github.com/ekaragodin/clone/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ekaragodin/clone/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/ekaragodin/clone.svg)](https://github.com/ekaragodin/clone)
 
 A simple utility for the convenient clone.
