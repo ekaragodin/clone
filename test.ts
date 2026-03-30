@@ -108,6 +108,52 @@ Deno.test("openEditor invokes the configured editor", async function () {
   });
 });
 
+Deno.test("openEditor supports editor arguments from EDITOR", async function () {
+  let received:
+    | {
+      command: string;
+      args: string[];
+    }
+    | undefined;
+
+  const runner: CommandRunner = (command, args) => {
+    received = { command, args };
+    return Promise.resolve(true);
+  };
+
+  await openEditor("zed --wait", "/tmp/project", runner);
+
+  assertEquals(received, {
+    command: "zed",
+    args: ["--wait", "/tmp/project"],
+  });
+});
+
+Deno.test("openEditor supports quoted executable paths", async function () {
+  let received:
+    | {
+      command: string;
+      args: string[];
+    }
+    | undefined;
+
+  const runner: CommandRunner = (command, args) => {
+    received = { command, args };
+    return Promise.resolve(true);
+  };
+
+  await openEditor(
+    '"/Applications/Zed Preview.app/Contents/MacOS/zed" --wait',
+    "/tmp/project",
+    runner,
+  );
+
+  assertEquals(received, {
+    command: "/Applications/Zed Preview.app/Contents/MacOS/zed",
+    args: ["--wait", "/tmp/project"],
+  });
+});
+
 Deno.test("openEditor throws when the editor command fails", async function () {
   await assertRejects(
     () => openEditor("code", "/tmp/project", () => Promise.resolve(false)),

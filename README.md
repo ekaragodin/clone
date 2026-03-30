@@ -27,7 +27,8 @@ deno install --global --allow-env --allow-read --allow-write --allow-run --force
 
 We use environment variables for configuration.
 
-- `$EDITOR` - a path to an editor to open cloned repository.
+- `$EDITOR` - a path to an editor to open cloned repository. Arguments are
+  supported too, for example `zed --wait`.
 - `$SRC_DIR` - a path to a root directory for sources.
 
 ## License
