@@ -13,6 +13,82 @@ const runCommand: CommandRunner = async (command, args) => {
   return success;
 };
 
+function parseCommandLine(input: string) {
+  const parts: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | undefined;
+  let escaping = false;
+  let tokenStarted = false;
+
+  const pushCurrent = () => {
+    if (!tokenStarted) {
+      return;
+    }
+
+    parts.push(current);
+    current = "";
+    tokenStarted = false;
+  };
+
+  for (const char of input) {
+    if (escaping) {
+      current += char;
+      tokenStarted = true;
+      escaping = false;
+      continue;
+    }
+
+    if (quote) {
+      if (char === quote) {
+        quote = undefined;
+        continue;
+      }
+
+      if (quote === '"' && char === "\\") {
+        escaping = true;
+        tokenStarted = true;
+        continue;
+      }
+
+      current += char;
+      tokenStarted = true;
+      continue;
+    }
+
+    if (char === "'" || char === '"') {
+      quote = char;
+      tokenStarted = true;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      pushCurrent();
+      continue;
+    }
+
+    if (char === "\\") {
+      escaping = true;
+      tokenStarted = true;
+      continue;
+    }
+
+    current += char;
+    tokenStarted = true;
+  }
+
+  if (escaping) {
+    throw new Error("Environment variable 'EDITOR' ends with an escape.");
+  }
+
+  if (quote) {
+    throw new Error("Environment variable 'EDITOR' has an unterminated quote.");
+  }
+
+  pushCurrent();
+
+  return parts;
+}
+
 export function expandHomeDir(input: string, homeDir?: string) {
   if (!homeDir) {
     return input;
@@ -65,14 +141,21 @@ export async function openEditor(
   dest: string,
   runner: CommandRunner = runCommand,
 ) {
-  if (!editor) {
+  if (!editor.trim()) {
+    console.log("Environment variable 'EDITOR' is empty.");
+    return;
+  }
+
+  const [command, ...editorArgs] = parseCommandLine(editor);
+
+  if (!command) {
     console.log("Environment variable 'EDITOR' is empty.");
     return;
   }
 
   console.log(`Open '${dest}' in '${editor}'...`);
 
-  if (!await runner(editor, [dest])) {
+  if (!await runner(command, [...editorArgs, dest])) {
     throw new Error("Failed to open editor.");
   }
 }
