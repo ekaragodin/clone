@@ -3,6 +3,7 @@ import {
   clone,
   type CommandRunner,
   expandHomeDir,
+  getHelpText,
   openEditor,
   prepareDestPath,
 } from "./mod.ts";
@@ -22,6 +23,19 @@ Deno.test("expandHomeDir expands a leading tilde", function () {
   assertEquals(expandHomeDir("~/src", "/Users/tester"), "/Users/tester/src");
   assertEquals(expandHomeDir("~", "/Users/tester"), "/Users/tester");
   assertEquals(expandHomeDir("/tmp/src", "/Users/tester"), "/tmp/src");
+});
+
+Deno.test("getHelpText returns basic usage and example", function () {
+  assertEquals(
+    getHelpText(),
+    [
+      "A simple utility for the convenient clone.",
+      "",
+      "Usage: clone <repository>",
+      "",
+      "Example: clone https://github.com/denoland/deno.git",
+    ].join("\n"),
+  );
 });
 
 Deno.test("clone invokes git clone when destination is not cloned yet", async function () {
@@ -160,4 +174,28 @@ Deno.test("openEditor throws when the editor command fails", async function () {
     Error,
     "Failed to open editor.",
   );
+});
+
+Deno.test("clone --help prints help and exits successfully", async function () {
+  const command = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      "--allow-env",
+      "--allow-read",
+      "--allow-write",
+      "--allow-run",
+      "clone.ts",
+      "--help",
+    ],
+    cwd: Deno.cwd(),
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const { code, stdout, stderr } = await command.output();
+  const decoder = new TextDecoder();
+
+  assertEquals(code, 0);
+  assertEquals(decoder.decode(stdout).trimEnd(), getHelpText());
+  assertEquals(decoder.decode(stderr), "");
 });

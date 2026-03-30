@@ -13,6 +13,16 @@ const runCommand: CommandRunner = async (command, args) => {
   return success;
 };
 
+export function getHelpText() {
+  return [
+    "A simple utility for the convenient clone.",
+    "",
+    "Usage: clone <repository>",
+    "",
+    "Example: clone https://github.com/denoland/deno.git",
+  ].join("\n");
+}
+
 function parseCommandLine(input: string) {
   const parts: string[] = [];
   let current = "";
