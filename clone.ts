@@ -1,6 +1,6 @@
-#!/usr/bin/env -S deno run --unstable --allow-env --allow-read --allow-write --allow-run
-import { fs, path } from "./deps.ts";
-import { prepareDestPath, clone, openEditor } from "./mod.ts";
+#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run
+import { ensureDirSync } from "jsr:@std/fs@1.0.23";
+import { clone, expandHomeDir, openEditor, prepareDestPath } from "./mod.ts";
 const { args, exit, env } = Deno;
 
 async function main() {
@@ -13,9 +13,12 @@ async function main() {
       throw new Error("You must specify a repository to clone.");
     }
 
-    const dest = prepareDestPath(path.untildify(root), source);
+    const dest = prepareDestPath(
+      expandHomeDir(root, env.get("HOME") ?? undefined),
+      source,
+    );
 
-    fs.ensureDirSync(dest);
+    ensureDirSync(dest);
     await clone(source, dest);
     if (editor) {
       await openEditor(editor, dest);
@@ -23,7 +26,8 @@ async function main() {
 
     console.log("Done.");
   } catch (e) {
-    console.log(`Error: ${e.message}`);
+    const message = e instanceof Error ? e.message : String(e);
+    console.error(`Error: ${message}`);
     exit(1);
   }
 }

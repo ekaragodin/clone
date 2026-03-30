@@ -11,15 +11,17 @@ A simple utility for the convenient clone.
 clone https://github.com/denoland/deno.git
 ```
 
-This command creates the directory `~/src/github.com/denoland/deno`. Then it clones the repository into this directory and opens it in your editor.
+This command creates the directory `~/src/github.com/denoland/deno`. Then it
+clones the repository into this directory and opens it in your editor.
 
 ## Install
 
 ```bash
-deno install --allow-env --allow-read --allow-write --allow-run --unstable --force https://deno.land/x/clone@v1.0.6/clone.ts
+deno install --global --allow-env --allow-read --allow-write --allow-run --force --name clone https://raw.githubusercontent.com/ekaragodin/clone/master/clone.ts
 ```
 
-> By default scripts are installed at \$HOME/.deno/bin and that directory must be added to the path manually. See more in Deno [docs](https://deno.land/std/manual.md#installing-executable-scripts).
+> By default scripts are installed at `$HOME/.deno/bin`. See the Deno
+> [install command docs](https://docs.deno.com/runtime/reference/cli/install/).
 
 ## Configure
 
