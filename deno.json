@@ -1,4 +1,9 @@
 {
+  "lint": {
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
+  },
   "tasks": {
     "test": "deno test --allow-read --allow-write test.ts"
   }
