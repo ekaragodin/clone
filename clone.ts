@@ -1,10 +1,21 @@
 #!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run
 import { ensureDirSync } from "jsr:@std/fs@1.0.23";
-import { clone, expandHomeDir, openEditor, prepareDestPath } from "./mod.ts";
+import {
+  clone,
+  expandHomeDir,
+  getHelpText,
+  openEditor,
+  prepareDestPath,
+} from "./mod.ts";
 const { args, exit, env } = Deno;
 
 async function main() {
   try {
+    if (args.includes("--help")) {
+      console.log(getHelpText());
+      return;
+    }
+
     const editor = env.get("EDITOR");
     const root = env.get("SRC_DIR") || "~/src";
     const [source] = args;

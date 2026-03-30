@@ -11,6 +11,8 @@ A simple utility for the convenient clone.
 clone https://github.com/denoland/deno.git
 ```
 
+Use `clone --help` to see the basic command format and an example invocation.
+
 This command creates the directory `~/src/github.com/denoland/deno`. Then it
 clones the repository into this directory and opens it in your editor.
 
