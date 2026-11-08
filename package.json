@@ -1,0 +1,47 @@
+{
+  "name": "@ekaragodin/clone",
+  "version": "0.1.0",
+  "description": "Clone repositories into an organized source directory and open your editor.",
+  "license": "MIT",
+  "author": "Evgenii Karagodin (https://ekaragodin.com)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ekaragodin/clone.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "clone": "dist/clone.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/mod.d.ts",
+      "import": "./dist/mod.js"
+    }
+  },
+  "files": [
+    "dist/clone.js",
+    "dist/mod.js",
+    "dist/mod.d.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true })' && tsc",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "npm run build && node --test dist/test.js dist/cli.test.js",
+    "test:install": "npm run build && node scripts/check-install.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1"
+  }
+}

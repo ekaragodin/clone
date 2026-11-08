@@ -1,4 +1,8 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
+import { deepStrictEqual as assertEquals, rejects as assertRejects } from "node:assert/strict";
+import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "node:test";
 import {
   clone,
   type CommandRunner,
@@ -6,9 +10,9 @@ import {
   getHelpText,
   openEditor,
   prepareDestPath,
-} from "./mod.ts";
+} from "./mod.js";
 
-Deno.test("prepareDestPath supports https and ssh remotes", function () {
+test("prepareDestPath supports https and ssh remotes", function () {
   assertEquals(
     prepareDestPath("/src", "https://github.com/denoland/deno.git"),
     "/src/github.com/denoland/deno",
@@ -19,13 +23,13 @@ Deno.test("prepareDestPath supports https and ssh remotes", function () {
   );
 });
 
-Deno.test("expandHomeDir expands a leading tilde", function () {
+test("expandHomeDir expands a leading tilde", function () {
   assertEquals(expandHomeDir("~/src", "/Users/tester"), "/Users/tester/src");
   assertEquals(expandHomeDir("~", "/Users/tester"), "/Users/tester");
   assertEquals(expandHomeDir("/tmp/src", "/Users/tester"), "/tmp/src");
 });
 
-Deno.test("getHelpText returns basic usage and example", function () {
+test("getHelpText returns basic usage and example", function () {
   assertEquals(
     getHelpText(),
     [
@@ -38,8 +42,8 @@ Deno.test("getHelpText returns basic usage and example", function () {
   );
 });
 
-Deno.test("clone invokes git clone when destination is not cloned yet", async function () {
-  const dest = await Deno.makeTempDir();
+test("clone invokes git clone when destination is not cloned yet", async function () {
+  const dest = await mkdtemp(join(tmpdir(), "clone-test-"));
   let received:
     | {
       command: string;
@@ -60,12 +64,12 @@ Deno.test("clone invokes git clone when destination is not cloned yet", async fu
       args: ["clone", "https://github.com/denoland/deno.git", dest],
     });
   } finally {
-    await Deno.remove(dest, { recursive: true });
+    await rm(dest, { recursive: true });
   }
 });
 
-Deno.test("clone skips git clone when repository already exists", async function () {
-  const dest = await Deno.makeTempDir();
+test("clone skips git clone when repository already exists", async function () {
+  const dest = await mkdtemp(join(tmpdir(), "clone-test-"));
   let invocationCount = 0;
 
   const runner: CommandRunner = () => {
@@ -74,16 +78,16 @@ Deno.test("clone skips git clone when repository already exists", async function
   };
 
   try {
-    await Deno.mkdir(`${dest}/.git`);
+    await mkdir(`${dest}/.git`);
     await clone("https://github.com/denoland/deno.git", dest, runner);
     assertEquals(invocationCount, 0);
   } finally {
-    await Deno.remove(dest, { recursive: true });
+    await rm(dest, { recursive: true });
   }
 });
 
-Deno.test("clone throws when git clone fails", async function () {
-  const dest = await Deno.makeTempDir();
+test("clone throws when git clone fails", async function () {
+  const dest = await mkdtemp(join(tmpdir(), "clone-test-"));
 
   try {
     await assertRejects(
@@ -93,15 +97,14 @@ Deno.test("clone throws when git clone fails", async function () {
           dest,
           () => Promise.resolve(false),
         ),
-      Error,
-      "Failed to clone.",
+      { message: "Failed to clone." },
     );
   } finally {
-    await Deno.remove(dest, { recursive: true });
+    await rm(dest, { recursive: true });
   }
 });
 
-Deno.test("openEditor invokes the configured editor", async function () {
+test("openEditor invokes the configured editor", async function () {
   let received:
     | {
       command: string;
@@ -122,7 +125,7 @@ Deno.test("openEditor invokes the configured editor", async function () {
   });
 });
 
-Deno.test("openEditor supports editor arguments from EDITOR", async function () {
+test("openEditor supports editor arguments from EDITOR", async function () {
   let received:
     | {
       command: string;
@@ -143,7 +146,7 @@ Deno.test("openEditor supports editor arguments from EDITOR", async function () 
   });
 });
 
-Deno.test("openEditor supports quoted executable paths", async function () {
+test("openEditor supports quoted executable paths", async function () {
   let received:
     | {
       command: string;
@@ -168,34 +171,75 @@ Deno.test("openEditor supports quoted executable paths", async function () {
   });
 });
 
-Deno.test("openEditor throws when the editor command fails", async function () {
+test("openEditor throws when the editor command fails", async function () {
   await assertRejects(
     () => openEditor("code", "/tmp/project", () => Promise.resolve(false)),
-    Error,
-    "Failed to open editor.",
+    { message: "Failed to open editor." },
   );
 });
 
-Deno.test("clone --help prints help and exits successfully", async function () {
-  const command = new Deno.Command(Deno.execPath(), {
-    args: [
-      "run",
-      "--allow-env",
-      "--allow-read",
-      "--allow-write",
-      "--allow-run",
-      "clone.ts",
-      "--help",
-    ],
-    cwd: Deno.cwd(),
-    stdout: "piped",
-    stderr: "piped",
+
+test("expandHomeDir preserves a tilde when HOME is absent", () => {
+  assertEquals(expandHomeDir("~/src"), "~/src");
+});
+
+test("clone recognizes a .git file", async () => {
+  const { writeFile } = await import("node:fs/promises");
+  const dest = await mkdtemp(join(tmpdir(), "clone-test-"));
+  try {
+    await writeFile(join(dest, ".git"), "gitdir: elsewhere");
+    await clone("https://example.invalid/repo.git", dest, () => {
+      throw new Error("Git must not run");
+    });
+  } finally {
+    await rm(dest, { recursive: true });
+  }
+});
+
+for (const editor of ["", "   ", '""']) {
+  test(`openEditor skips an empty executable: ${JSON.stringify(editor)}`, async () => {
+    await openEditor(editor, "/tmp/project", () => {
+      throw new Error("Editor must not run");
+    });
   });
+}
 
-  const { code, stdout, stderr } = await command.output();
-  const decoder = new TextDecoder();
+for (const [editor, message] of [
+  ['"unterminated', "Environment variable 'EDITOR' has an unterminated quote."],
+  ["editor\\", "Environment variable 'EDITOR' ends with an escape."],
+]) {
+  test(`openEditor rejects invalid command: ${JSON.stringify(editor)}`, async () => {
+    await assertRejects(() => openEditor(editor, "/tmp/project"), { message });
+  });
+}
 
-  assertEquals(code, 0);
-  assertEquals(decoder.decode(stdout).trimEnd(), getHelpText());
-  assertEquals(decoder.decode(stderr), "");
+test("openEditor passes shell syntax and spaces as literal arguments", async () => {
+  let received: string[] = [];
+  await openEditor('editor "$(whoami)" ";" ""', "/tmp/project with spaces", (_command, args) => {
+    received = args;
+    return Promise.resolve(true);
+  });
+  assertEquals(received, ["$(whoami)", ";", "", "/tmp/project with spaces"]);
+});
+
+test("the real runner succeeds on zero exit", async () => {
+  await openEditor(`"${process.execPath}" -e 'process.exit(0)'`, "/tmp/project");
+});
+
+for (const script of ['process.exit(7)', 'process.kill(process.pid, "SIGTERM")']) {
+  test(`the real runner rejects unsuccessful termination: ${script}`, async () => {
+    await assertRejects(
+      () => openEditor(`"${process.execPath}" -e '${script}'`, "/tmp/project"),
+      { message: "Failed to open editor." },
+    );
+  });
+}
+
+test("the real runner reports a missing executable", async () => {
+  const dest = await mkdtemp(join(tmpdir(), "clone-test-"));
+  try {
+    await assertRejects(() => openEditor(`"${join(dest, "missing-editor")}"`, dest), { code: "ENOENT" });
+  } finally {
+    await rm(dest, { recursive: true });
+  }
 });

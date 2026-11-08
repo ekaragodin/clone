@@ -3,7 +3,8 @@
 [![CI](https://github.com/ekaragodin/clone/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ekaragodin/clone/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/ekaragodin/clone.svg)](https://github.com/ekaragodin/clone)
 
-A simple utility for the convenient clone.
+Clone repositories into an organized source directory and open your editor.
+Requires Node.js 24 or newer and Git. Supports macOS and Linux.
 
 ## Usage
 
@@ -11,27 +12,109 @@ A simple utility for the convenient clone.
 clone https://github.com/denoland/deno.git
 ```
 
-Use `clone --help` to see the basic command format and an example invocation.
+This creates `~/src/github.com/denoland/deno`, clones the repository there, and
+opens it in `$EDITOR` when configured. If the repository already exists, it
+opens it without cloning again.
 
-This command creates the directory `~/src/github.com/denoland/deno`. Then it
-clones the repository into this directory and opens it in your editor.
+HTTPS and SSH remotes are supported:
+
+```bash
+clone git@github.com:denoland/deno.git
+clone --help
+```
 
 ## Install
 
+After the first npm release, install globally:
+
 ```bash
-deno install --global --allow-env --allow-read --allow-write --allow-run --force --name clone https://raw.githubusercontent.com/ekaragodin/clone/master/clone.ts
+npm install --global @ekaragodin/clone
+clone https://github.com/denoland/deno.git
 ```
 
-> By default scripts are installed at `$HOME/.deno/bin`. See the Deno
-> [install command docs](https://docs.deno.com/runtime/reference/cli/install/).
+Or run without a global installation:
+
+```bash
+npx @ekaragodin/clone https://github.com/denoland/deno.git
+```
+
+The package contains compiled JavaScript; consumers do not need TypeScript or a
+build step. Until the first registry release, build from a checkout:
+
+```bash
+git clone https://github.com/ekaragodin/clone.git
+cd clone
+npm ci
+npm install --global .
+```
+
+Use a revision containing the Node.js migration if it has not reached the
+default branch yet. Some npm versions inherit global installation settings
+while preparing Git dependencies, so use the checkout workflow above rather
+than a direct global installation from a Git URL.
+
+When replacing an older Deno installation, check `command -v clone` to see which
+executable your shell resolves. Remove the previous installation with
+`deno uninstall --global clone` before using npm's command, and ensure npm's
+global bin directory (`$(npm prefix --global)/bin`) is in `PATH`.
 
 ## Configure
 
-We use environment variables for configuration.
+Use environment variables:
 
-- `$EDITOR` - a path to an editor to open cloned repository. Arguments are
-  supported too, for example `zed --wait`.
-- `$SRC_DIR` - a path to a root directory for sources.
+- `$EDITOR`: editor executable, optionally with arguments, such as `zed --wait`.
+  Quote executable paths containing spaces.
+- `$SRC_DIR`: root directory for sources; defaults to `~/src`.
+
+For example:
+
+```bash
+export SRC_DIR="$HOME/Code"
+export EDITOR='zed --wait'
+clone https://github.com/denoland/deno.git
+```
+
+Editor commands support quotes and escapes. They run directly, without shell
+expansion, pipes, or command substitution.
+
+## Development
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run test:install
+```
+
+`npm ci` builds the project through `prepare`. `npm test` rebuilds and runs
+Node's test runner. Tests clone a local fixture without external Git hosts.
+Installation checks pack the candidate, install it under temporary npm prefixes,
+run it through npx with an isolated cache, import its public library entry, and
+install directly from a disposable Git source repository into a local consumer.
+They leave your global installation untouched.
+
+The library helpers are available through the package's ESM entry point:
+
+```js
+import { prepareDestPath } from "@ekaragodin/clone";
+```
+
+## Release
+
+Confirm npm scope access and the package version before the first release.
+After all development checks pass, inspect the artifact and publish it:
+
+```bash
+npm run build
+npm pack --dry-run
+npm publish --dry-run
+npm publish --access public
+```
+
+The `prepare` hook builds before packing and publication. After publication,
+verify global installation and npx execution against the released version
+using a clean prefix and cache. Registry publication is a manual step.
 
 ## License
 
