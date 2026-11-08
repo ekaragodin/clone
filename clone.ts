@@ -1,13 +1,13 @@
-#!/usr/bin/env -S deno run --allow-env --allow-read --allow-write --allow-run
-import { ensureDirSync } from "jsr:@std/fs@1.0.23";
+#!/usr/bin/env node
+import { mkdir } from "node:fs/promises";
 import {
   clone,
   expandHomeDir,
   getHelpText,
   openEditor,
   prepareDestPath,
-} from "./mod.ts";
-const { args, exit, env } = Deno;
+} from "./mod.js";
+const args = process.argv.slice(2);
 
 async function main() {
   try {
@@ -16,8 +16,8 @@ async function main() {
       return;
     }
 
-    const editor = env.get("EDITOR");
-    const root = env.get("SRC_DIR") || "~/src";
+    const editor = process.env.EDITOR;
+    const root = process.env.SRC_DIR || "~/src";
     const [source] = args;
 
     if (!source) {
@@ -25,11 +25,11 @@ async function main() {
     }
 
     const dest = prepareDestPath(
-      expandHomeDir(root, env.get("HOME") ?? undefined),
+      expandHomeDir(root, process.env.HOME),
       source,
     );
 
-    ensureDirSync(dest);
+    await mkdir(dest, { recursive: true });
     await clone(source, dest);
     if (editor) {
       await openEditor(editor, dest);
@@ -39,8 +39,8 @@ async function main() {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error(`Error: ${message}`);
-    exit(1);
+    process.exitCode = 1;
   }
 }
 
-main();
+await main();

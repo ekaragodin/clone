@@ -10,19 +10,34 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [24, 26]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          deno-version: v2.x
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run linter
-        run: deno lint .
+        run: npm run lint
+
+      - name: Check types
+        run: npm run typecheck
 
       - name: Run tests
-        run: deno task test
+        run: npm test
+
+      - name: Check npm installation and npx execution
+        run: npm run test:install

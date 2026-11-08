@@ -1,17 +1,33 @@
-import { exists } from "jsr:@std/fs@1.0.23";
-import * as path from "jsr:@std/path@1.1.4";
+import { spawn } from "node:child_process";
+import { stat } from "node:fs/promises";
+import * as path from "node:path";
 
 export type CommandRunner = (
   command: string,
   args: string[],
 ) => Promise<boolean>;
 
-const runCommand: CommandRunner = async (command, args) => {
-  const child = new Deno.Command(command, { args }).spawn();
-  const { success } = await child.status;
+const runCommand: CommandRunner = (command, args) =>
+  new Promise((resolve, reject) => {
+    const child = spawn(command, args, { shell: false, stdio: "inherit" });
+    child.once("error", reject);
+    child.once("close", (code) => resolve(code === 0));
+  });
 
-  return success;
-};
+async function exists(file: string) {
+  try {
+    await stat(file);
+    return true;
+  } catch (error) {
+    if (
+      error instanceof Error && "code" in error &&
+      (error.code === "ENOENT" || error.code === "ENOTDIR")
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
 
 export function getHelpText() {
   return [
